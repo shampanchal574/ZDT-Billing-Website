@@ -80,7 +80,7 @@ app.post("/verify-payment", async (req, res) => {
     } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, error: "Missing fields" });
+      return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
     const generated_signature = crypto
@@ -90,12 +90,13 @@ app.post("/verify-payment", async (req, res) => {
 
     if (generated_signature !== razorpay_signature) {
       console.log("❌ Signature mismatch");
-      return res.json({ success: false });
+      return res.json({ success: false, message: "Invalid payment signature" });
     }
 
     console.log("✅ Payment verified");
 
     const license = "ZDT-" + uuidv4().slice(0, 8).toUpperCase();
+    console.log("🎯 Generated License:", license);
 
     const { error } = await supabase.from("licenses").insert([
       {
@@ -108,7 +109,7 @@ app.post("/verify-payment", async (req, res) => {
 
     if (error) {
       console.error("❌ Supabase Insert Error:", error);
-      return res.status(500).json({ success: false, error: error.message });
+      return res.status(500).json({ success: false, message: "DB insert failed" });
     }
 
     res.json({
@@ -119,7 +120,7 @@ app.post("/verify-payment", async (req, res) => {
 
   } catch (err) {
     console.error("💥 Verify Payment Crash:", err);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: "Server crash" });
   }
 });
 
@@ -128,11 +129,16 @@ app.post("/activate-license", async (req, res) => {
   try {
     console.log("🔐 Activation Body:", req.body);
 
-    const { license_key, device_id } = req.body;
+    let { license_key, device_id } = req.body;
 
     if (!license_key || !device_id) {
       return res.status(400).json({ success: false, message: "Missing data" });
     }
+
+    // 🔥 Normalize license
+    license_key = license_key.trim().toUpperCase();
+
+    console.log("🔍 Searching license:", license_key);
 
     const { data, error } = await supabase
       .from("licenses")
@@ -140,9 +146,11 @@ app.post("/activate-license", async (req, res) => {
       .eq("license_key", license_key)
       .maybeSingle();
 
+    console.log("📊 DB Result:", data, error);
+
     if (error) {
       console.error("❌ Supabase Fetch Error:", error);
-      return res.status(500).json({ success: false });
+      return res.status(500).json({ success: false, message: "Database error" });
     }
 
     if (!data) {
@@ -162,7 +170,7 @@ app.post("/activate-license", async (req, res) => {
 
       if (updateError) {
         console.error("❌ Update Error:", updateError);
-        return res.status(500).json({ success: false });
+        return res.status(500).json({ success: false, message: "Update failed" });
       }
 
       console.log("✅ Activated new device");
@@ -171,10 +179,12 @@ app.post("/activate-license", async (req, res) => {
 
     // ✅ Same device
     if (data.device_id === device_id) {
+      console.log("✅ Same device login");
       return res.json({ success: true, message: "Welcome back" });
     }
 
     // ❌ Different device
+    console.log("❌ Different device attempted");
     return res.json({
       success: false,
       message: "License already used on another device",
@@ -182,7 +192,7 @@ app.post("/activate-license", async (req, res) => {
 
   } catch (err) {
     console.error("💥 Activation Crash:", err);
-    res.status(500).json({ success: false });
+    return res.status(500).json({ success: false, message: "Server crash" });
   }
 });
 
