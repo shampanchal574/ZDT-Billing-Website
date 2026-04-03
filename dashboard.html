@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - ZDT Billing</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body style="font-family: Arial; text-align:center; margin-top:40px;">
+
+<h2>ZDT Billing Dashboard</h2>
+
+<p id="userEmail"></p>
+
+<!-- Download Software -->
+<a href="https://your-software-link.exe" download>
+  <button>⬇️ Download Software</button>
+</a>
+
+<br><br>
+
+<!-- Buy License -->
+<button onclick="payNow()">💳 Buy License ₹499</button>
+
+<br><br>
+
+<!-- Show Licenses -->
+<button onclick="getLicenses()">🔑 Get My Licenses</button>
+
+<div id="licenses"></div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_ANON_KEY"
+);
+
+// 🔐 Check Login
+async function checkUser() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("userEmail").innerText =
+      "Logged in as: " + user.email;
+  }
+}
+
+checkUser();
+
+// 💳 Payment
+async function payNow() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  // Get Key
+  const keyRes = await fetch("https://zdt-server.onrender.com/get-key");
+  const { key } = await keyRes.json();
+
+  // Create Order
+  const orderRes = await fetch("https://zdt-server.onrender.com/create-order", {
+    method: "POST"
+  });
+  const order = await orderRes.json();
+
+  const options = {
+    key: key,
+    amount: order.amount,
+    currency: order.currency,
+    name: "ZDT Billing Software",
+    description: "License Purchase",
+    order_id: order.id,
+
+    handler: async function (response) {
+
+      const verifyRes = await fetch("https://zdt-server.onrender.com/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + session.access_token
+        },
+        body: JSON.stringify(response)
+      });
+
+      const result = await verifyRes.json();
+
+      if (result.success) {
+        alert("🎉 License: " + result.license);
+        getLicenses(); // refresh list
+      } else {
+        alert("❌ Payment verification failed");
+      }
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+
+// 🔑 Get Licenses
+async function getLicenses() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  const res = await fetch("https://zdt-server.onrender.com/get-licenses", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + session.access_token
+    }
+  });
+
+  const result = await res.json();
+
+  if (result.success && result.licenses.length > 0) {
+    let html = "<h3>Your Licenses:</h3>";
+
+    result.licenses.forEach(l => {
+      html += `<p>🔑 ${l.license_key}</p>`;
+    });
+
+    document.getElementById("licenses").innerHTML = html;
+  } else {
+    document.getElementById("licenses").innerHTML = "No licenses found";
+  }
+}
+</script>
+
+</body>
+</html>

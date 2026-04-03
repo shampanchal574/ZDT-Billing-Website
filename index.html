@@ -1,101 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZDT Billing Software</title>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <title>Login - ZDT Billing</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 
-<body style="font-family: Arial; text-align: center; margin-top: 100px;">
+<body style="text-align:center; margin-top:100px; font-family:Arial;">
 
-  <h1>ZDT Billing Software</h1>
-  <button onclick="pay()" style="padding: 15px 30px; font-size: 18px;">
-    Buy Now ₹499
-  </button>
+<h2>ZDT Billing Software</h2>
 
-  <p id="status"></p>
+<input type="email" id="email" placeholder="Enter your email" />
+<br><br>
+<button onclick="login()">Continue</button>
 
-  <script>
-    async function pay() {
-      try {
-        document.getElementById("status").innerText = "Processing...";
+<p id="status"></p>
 
-        // 🔹 Get Razorpay key from backend
-        const keyRes = await fetch("http://localhost:5000/get-key");
-        const keyData = await keyRes.json();
+<script>
+const supabaseClient = supabase.createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_ANON_KEY"
+);
 
-        console.log("Key:", keyData);
+// Send Magic Link
+async function login() {
+  const email = document.getElementById("email").value;
 
-        // 🔹 Create order
-        const orderRes = await fetch("http://localhost:5000/create-order", {
-          method: "POST"
-        });
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email: email
+  });
 
-        const order = await orderRes.json();
+  if (error) {
+    alert("❌ Error sending email");
+  } else {
+    document.getElementById("status").innerText =
+      "📩 Check your email and click login link";
+  }
+}
 
-        console.log("Order:", order);
-
-        const options = {
-          key: keyData.key,
-          amount: order.amount,
-          currency: "INR",
-          order_id: order.id,
-
-          name: "ZDT Billing Software",
-          description: "Purchase License",
-
-          prefill: {
-            name: "Test User",
-            email: "test@example.com",
-            contact: "9876543210"
-          },
-
-          theme: {
-            color: "#3399cc"
-          },
-
-          handler: async function (response) {
-
-            console.log("Payment Response:", response);
-
-            const verifyRes = await fetch("http://localhost:5000/verify-payment", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                razorpay_order_id: order.id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
-              })
-            });
-
-            const data = await verifyRes.json();
-
-            console.log("Verify:", data);
-
-            if (data.success) {
-              localStorage.setItem("license", data.license);
-
-              // 🔹 For now dummy download link
-              localStorage.setItem("download", "#");
-
-              window.location.href = "success.html";
-            } else {
-              alert("Payment verification failed");
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.open();
-
-      } catch (err) {
-        console.error("ERROR:", err);
-        document.getElementById("status").innerText = "Error occurred";
-        alert("Something went wrong. Check console (F12)");
-      }
-    }
-  </script>
+// Detect login
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (session && session.user) {
+    // Redirect to dashboard
+    window.location.href = "dashboard.html";
+  }
+});
+</script>
 
 </body>
 </html>
