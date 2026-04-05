@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+
+<body style="font-family:Arial; padding:20px;">
+
+<h2>Dashboard</h2>
+
+<p id="user"></p>
+
+<button onclick="download()">Download Software</button>
+<button onclick="buy()">Buy License</button>
+<button onclick="loadLicenses()">My Licenses</button>
+<button onclick="logout()">Logout</button>
+
+<div id="licenses"></div>
+
+<script>
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+  "https://sdmarwodashukreugeft.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbWFyd29kYXNodWtyZXVnZWZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzA4MjUsImV4cCI6MjA5MDUwNjgyNX0.8Qvv4vUOY8iUkUWxpnNtxcwdkW4dKLENmLt77eYVLyg"
+);
+
+// 🔥 CHANGE THIS AFTER DEPLOY
+const BACKEND_URL = "https://your-app.onrender.com";
+
+// 🔥 PUT YOUR DOWNLOAD LINK HERE
+const DOWNLOAD_LINK = "https://github.com/your-username/zdt-billing/releases/download/v1/setup.exe";
+
+// INIT
+async function init() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("user").innerText =
+    "Logged in: " + data.session.user.email;
+}
+
+init();
+
+// DOWNLOAD
+function download() {
+  window.location.href = DOWNLOAD_LINK;
+}
+
+// BUY LICENSE
+async function buy() {
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const token = sessionData.session.access_token;
+
+  const keyRes = await fetch(BACKEND_URL + "/get-key");
+  const keyData = await keyRes.json();
+
+  const orderRes = await fetch(BACKEND_URL + "/create-order", {
+    method: "POST"
+  });
+
+  const order = await orderRes.json();
+
+  const options = {
+    key: keyData.key,
+    amount: order.amount,
+    currency: "INR",
+    order_id: order.id,
+
+    handler: async function (response) {
+
+      const verifyRes = await fetch(BACKEND_URL + "/verify-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(response)
+      });
+
+      const result = await verifyRes.json();
+
+      alert("License: " + result.license);
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+
+// LOAD LICENSES
+async function loadLicenses() {
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  const token = sessionData.session.access_token;
+
+  const res = await fetch(BACKEND_URL + "/get-licenses", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+
+  let html = "<h3>Your Licenses:</h3>";
+
+  data.licenses.forEach(l => {
+    html += `<p>${l.license_key}</p>`;
+  });
+
+  document.getElementById("licenses").innerHTML = html;
+}
+
+// LOGOUT
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "index.html";
+}
+</script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+</body>
+</html>

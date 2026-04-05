@@ -9,7 +9,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// ================= GLOBAL ERROR HANDLER =================
+// ================= ERROR HANDLING =================
 process.on("uncaughtException", (err) => {
   console.error("💥 Uncaught Exception:", err);
 });
@@ -19,13 +19,8 @@ process.on("unhandledRejection", (err) => {
 });
 
 // ================= MIDDLEWARE =================
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.url}`);
-  next();
-});
 
 // ================= INIT =================
 const razorpay = new Razorpay({
@@ -37,6 +32,23 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+// ================= HELPER: VERIFY USER =================
+async function getUserEmail(req) {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) return null;
+
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data.user) return null;
+
+    return data.user.email;
+  } catch {
+    return null;
+  }
+}
 
 // ================= HOME =================
 app.get("/", (req, res) => {
@@ -67,51 +79,42 @@ app.post("/create-order", async (req, res) => {
 // ================= VERIFY PAYMENT =================
 app.post("/verify-payment", async (req, res) => {
   try {
-    console.log("🔍 Payment Body:", req.body);
-
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
     } = req.body;
 
-    // 🔐 STEP 1: Verify Supabase User
-    const token = req.headers.authorization?.split(" ")[1];
+    // 🔐 Verify User
+    const email = await getUserEmail(req);
 
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser(token);
-
-    if (userError || !userData.user) {
-      console.log("❌ Unauthorized user");
+    if (!email) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const email = userData.user.email;
-    console.log("👤 Verified User:", email);
+    console.log("👤 User:", email);
 
-    // 🔐 STEP 2: Validate payment fields
+    // 🔐 Validate payment
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Missing fields" });
+      return res.status(400).json({ success: false });
     }
 
-    // 🔐 STEP 3: Verify signature
+    // 🔐 Verify signature
     const generated_signature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(razorpay_order_id + "|" + razorpay_payment_id)
       .digest("hex");
 
     if (generated_signature !== razorpay_signature) {
-      console.log("❌ Signature mismatch");
-      return res.json({ success: false, message: "Invalid payment signature" });
+      return res.json({ success: false, message: "Invalid signature" });
     }
 
     console.log("✅ Payment verified");
 
-    // 🔐 STEP 4: Generate License
+    // 🔑 Generate License
     const license = "ZDT-" + uuidv4().slice(0, 8).toUpperCase();
-    console.log("🎯 Generated License:", license);
 
-    // 🔐 STEP 5: Store in DB
+    // 💾 Store License
     const { error } = await supabase.from("licenses").insert([
       {
         license_key: license,
@@ -123,8 +126,8 @@ app.post("/verify-payment", async (req, res) => {
     ]);
 
     if (error) {
-      console.error("❌ Supabase Insert Error:", error);
-      return res.status(500).json({ success: false, message: "DB insert failed" });
+      console.error("❌ DB Error:", error);
+      return res.status(500).json({ success: false });
     }
 
     res.json({
@@ -133,39 +136,37 @@ app.post("/verify-payment", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("💥 Verify Payment Crash:", err);
-    res.status(500).json({ success: false, message: "Server crash" });
+    console.error("💥 Verify Error:", err);
+    res.status(500).json({ success: false });
   }
 });
 
 // ================= GET LICENSES =================
 app.get("/get-licenses", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const email = await getUserEmail(req);
 
-    const { data: userData, error } =
-      await supabase.auth.getUser(token);
-
-    if (error || !userData.user) {
+    if (!email) {
       return res.status(401).json({ success: false });
     }
 
-    const email = userData.user.email;
-
-    const { data, error: dbError } = await supabase
+    const { data, error } = await supabase
       .from("licenses")
-      .select("license_key, created_at")
-      .eq("email", email);
+      .select("*")
+      .eq("email", email)
+      .order("created_at", { ascending: false });
 
-    if (dbError) {
-      console.error("❌ Fetch Error:", dbError);
+    if (error) {
       return res.status(500).json({ success: false });
     }
 
-    res.json({ success: true, licenses: data });
+    res.json({
+      success: true,
+      licenses: data,
+    });
 
   } catch (err) {
-    console.error("💥 Get Licenses Crash:", err);
+    console.error("💥 Fetch Error:", err);
     res.status(500).json({ success: false });
   }
 });
@@ -173,32 +174,26 @@ app.get("/get-licenses", async (req, res) => {
 // ================= ACTIVATE LICENSE =================
 app.post("/activate-license", async (req, res) => {
   try {
-    console.log("🔐 Activation Body:", req.body);
-
     let { license_key, device_id } = req.body;
 
     if (!license_key || !device_id) {
-      return res.status(400).json({ success: false, message: "Missing data" });
+      return res.status(400).json({ success: false });
     }
 
     license_key = license_key.trim().toUpperCase();
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("licenses")
       .select("*")
       .eq("license_key", license_key)
       .maybeSingle();
-
-    if (error) {
-      return res.status(500).json({ success: false });
-    }
 
     if (!data) {
       return res.json({ success: false, message: "Invalid license" });
     }
 
     if (!data.active) {
-      return res.json({ success: false, message: "Inactive license" });
+      return res.json({ success: false, message: "Inactive" });
     }
 
     if (!data.device_id) {
@@ -220,12 +215,12 @@ app.post("/activate-license", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("💥 Activation Crash:", err);
+    console.error("💥 Activation Error:", err);
     res.status(500).json({ success: false });
   }
 });
 
-// ================= START SERVER =================
+// ================= START =================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

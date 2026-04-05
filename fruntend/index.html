@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ZDT Billing</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+
+<body style="text-align:center; margin-top:100px; font-family:Arial;">
+
+<h2>ZDT Billing Software</h2>
+
+<input type="email" id="email" placeholder="Enter email" />
+<br><br>
+
+<button onclick="login()">Login</button>
+
+<p id="status"></p>
+
+<script>
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+  "https://sdmarwodashukreugeft.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbWFyd29kYXNodWtyZXVnZWZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MzA4MjUsImV4cCI6MjA5MDUwNjgyNX0.8Qvv4vUOY8iUkUWxpnNtxcwdkW4dKLENmLt77eYVLyg"
+);
+
+async function login() {
+  const email = document.getElementById("email").value;
+
+  await supabaseClient.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: window.location.origin + "/dashboard.html"
+    }
+  });
+
+  document.getElementById("status").innerText = "Check your email";
+}
+</script>
+
+</body>
+</html>
