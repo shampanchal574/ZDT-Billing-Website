@@ -94,6 +94,7 @@ app.post("/verify-payment", async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
+      email,
     } = req.body;
 
     // 🔐 Validate payment
@@ -116,11 +117,11 @@ app.post("/verify-payment", async (req, res) => {
     // 🔑 Generate License
     const license = "ZDT-" + uuidv4().slice(0, 8).toUpperCase();
 
-    // 💾 Store License (without email for anonymous checkout)
+    // 💾 Store License with email
     const { error } = await supabase.from("licenses").insert([
       {
         license_key: license,
-        email: null, // Anonymous purchase
+        email: email || null, // Store email from authenticated user
         active: true,
         device_id: null,
         created_at: new Date(),
@@ -146,10 +147,19 @@ app.post("/verify-payment", async (req, res) => {
 // ================= GET LICENSES =================
 app.get("/get-licenses", async (req, res) => {
   try {
-    const email = await getUserEmail(req);
+    const token = req.headers.authorization?.split(" ")[1];
+    let email = null;
+
+    // Try to get email from authenticated token
+    if (token) {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user) {
+        email = data.user.email;
+      }
+    }
 
     if (!email) {
-      return res.status(401).json({ success: false });
+      return res.status(401).json({ success: false, message: "Not authenticated" });
     }
 
     const { data, error } = await supabase

@@ -16,6 +16,63 @@
     font-family: 'DM Sans', sans-serif;
   }
 
+  /* ── Navbar Auth Links ── */
+  .navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 1rem 2rem;
+  }
+
+  .auth-links {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-auth {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+
+  .btn-auth-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(37,99,235,0.3);
+  }
+
+  .btn-auth-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.5);
+  }
+
+  .btn-auth-secondary {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #cbd5e1;
+  }
+
+  .btn-auth-secondary:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  .btn-auth-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .auth-loading {
+    display: none;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+  }
+
   /* ── Glowing Cursor ── */
   #cursor-glow {
     position: fixed;
@@ -23,7 +80,7 @@
     height: 22px;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 9998;
     transform: translate(-50%, -50%);
     background: radial-gradient(circle, #ffffff 0%, #60a5fa 40%, rgba(96,165,250,0) 100%);
     box-shadow:
@@ -45,7 +102,7 @@
   .butterfly {
     position: fixed;
     pointer-events: none;
-    z-index: 9998;
+    z-index: 9997;
     will-change: transform;
     filter: drop-shadow(0 0 4px currentColor);
   }
@@ -81,6 +138,13 @@
 <!-- Glowing Cursor -->
 <div id="cursor-glow"></div>
 
+<!-- Navbar with Auth -->
+<div class="navbar">
+  <div class="auth-links" id="auth-links">
+    <div class="auth-loading" id="auth-loading">Checking auth...</div>
+  </div>
+</div>
+
 <!-- HERO -->
 <section class="px-12 py-24 relative z-10">
   <p class="text-blue-400 text-sm font-medium tracking-widest uppercase mb-4 opacity-80">Zero Downtime Billing</p>
@@ -92,7 +156,7 @@
     Automated invoicing, real-time analytics, and zero-hassle reconciliation — all in one place.
   </p>
   <div class="flex gap-4 mt-10">
-    <button class="px-8 py-3 bg-blue-500 hover:bg-blue-400 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/30">
+    <button class="px-8 py-3 bg-blue-500 hover:bg-blue-400 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/30" onclick="startSignup()">
       Get Started Free
     </button>
     <button class="px-8 py-3 card hover:bg-white/10 rounded-xl font-semibold transition-all duration-200">
@@ -102,7 +166,104 @@
 </section>
 
 <!-- BUTTERFLIES SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ─────────────────────────────────────────────
+   SUPABASE INITIALIZATION
+───────────────────────────────────────────── */
+const SUPABASE_URL = 'https://qkbzwbgiyqedljkypvqe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrYnp3YmdpeXFlZGxqa3lwdnFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTcwMDAwMDAsImV4cCI6OTE2MzUxOTk5OX0.UuKZfEZY-yZsvmCh3X8yZyXzZU1NKJqPpPGx88xaQRU';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Check authentication status
+async function checkAuth() {
+  const authLoading = document.getElementById('auth-loading');
+  const authLinks = document.getElementById('auth-links');
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    authLoading.style.display = 'none';
+
+    if (session) {
+      // User is logged in
+      authLinks.innerHTML = `
+        <button class="btn-auth btn-auth-primary" onclick="goToDashboard()">📊 My Dashboard</button>
+        <button class="btn-auth btn-auth-secondary" onclick="logout()">Logout</button>
+      `;
+    } else {
+      // User is not logged in
+      authLinks.innerHTML = `
+        <button class="btn-auth btn-auth-secondary" onclick="startLogin()">Login</button>
+        <button class="btn-auth btn-auth-primary" onclick="startSignup()">Sign Up</button>
+      `;
+    }
+  } catch (err) {
+    console.error('Auth check error:', err);
+    authLoading.style.display = 'none';
+  }
+}
+
+// Auth functions
+async function startSignup() {
+  const email = prompt('Enter your email:');
+  if (!email) return;
+
+  try {
+    const { error } = await supabase.auth.signUp({
+      email: email,
+      password: Math.random().toString(36).slice(-12), // Temporary password
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      alert('Signup error: ' + error.message);
+    } else {
+      alert('Check your email for confirmation link!');
+      checkAuth();
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function startLogin() {
+  const email = prompt('Enter your email:');
+  if (!email) return;
+
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        emailRedirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      alert('Login error: ' + error.message);
+    } else {
+      alert('Check your email for the magic link!');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function goToDashboard() {
+  window.location.href = '/dashboard-user.html';
+}
+
+async function logout() {
+  await supabase.auth.signOut();
+  checkAuth();
+}
+
+// Initialize auth on page load
+checkAuth();
+
 /* ─────────────────────────────────────────────
    CURSOR – smooth glowing ball
 ───────────────────────────────────────────── */
