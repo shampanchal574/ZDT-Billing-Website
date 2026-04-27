@@ -1,202 +1,137 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ZDT Billing SaaS</title>
+<title>ZDT Billing SaaS - Professional Billing Solutions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Streamline your business billing with ZDT Billing SaaS. Automated invoicing, real-time analytics, and zero-hassle reconciliation.">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
-    min-height: 100vh;
-    overflow-x: hidden;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  /* ── Navbar Auth Links ── */
-  .navbar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 9999;
-    padding: 1rem 2rem;
-  }
-
-  .auth-links {
-    display: flex;
-    gap: 12px;
-  }
-
-  .btn-auth {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-  }
-
-  .btn-auth-primary {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(37,99,235,0.3);
-  }
-
-  .btn-auth-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(37,99,235,0.5);
-  }
-
-  .btn-auth-secondary {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #cbd5e1;
-  }
-
-  .btn-auth-secondary:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-  }
-
-  .btn-auth-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .auth-loading {
-    display: none;
-    color: #cbd5e1;
-    font-size: 0.85rem;
-  }
-
-  /* ── Glowing Cursor ── */
-  #cursor-glow {
-    position: fixed;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle, #ffffff 0%, #60a5fa 40%, rgba(96,165,250,0) 100%);
-    box-shadow:
-      0 0 8px 3px #60a5fa,
-      0 0 20px 6px rgba(96,165,250,0.6),
-      0 0 40px 12px rgba(59,130,246,0.3);
-    transition: transform 0.05s linear;
-  }
-
-  /* ── Cards ── */
-  .card {
-    backdrop-filter: blur(20px);
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 1.5rem;
-  }
-
-  /* ── Butterfly ── */
-  .butterfly {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9997;
-    will-change: transform;
-    filter: drop-shadow(0 0 4px currentColor);
-  }
-
-  /* Wing flap – speed varied per butterfly via --spd custom prop */
-  @keyframes flap {
-    0%   { transform: scaleX(1);   }
-    50%  { transform: scaleX(0.15); }
-    100% { transform: scaleX(1);   }
-  }
-  .wing-left  { animation: flap var(--spd, 0.38s) infinite ease-in-out; transform-origin: right center; }
-  .wing-right { animation: flap var(--spd, 0.38s) infinite ease-in-out reverse; transform-origin: left center; }
-
-  /* Hero */
-  h1 { font-family: 'Syne', sans-serif; line-height: 1.1; }
-
-  /* Subtle star dots */
-  .stars {
-    position: fixed; inset: 0; z-index: 0;
-    background-image:
-      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
-      radial-gradient(1.5px 1.5px at 80% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.2) 0%, transparent 100%);
-  }
+  body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1f2937; }
+  .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(59,130,246,0.25); }
+  .feature-card { background: rgba(255,255,255,0.88); border: 1px solid rgba(148,163,184,0.18); }
+  .hero-gradient { background: linear-gradient(135deg, #4338ca 0%, #0f172a 100%); }
+  .hero-gradient h1 { letter-spacing: -0.035em; }
 </style>
 </head>
-<body class="text-white">
+<body>
 
-<!-- Stars -->
-<div class="stars"></div>
-
-<!-- Glowing Cursor -->
-<div id="cursor-glow"></div>
-
-<!-- Navbar with Auth -->
-<div class="navbar">
-  <div class="auth-links" id="auth-links">
-    <div class="auth-loading" id="auth-loading">Checking auth...</div>
+<nav class="bg-white shadow sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <div class="text-xl font-semibold text-gray-900">ZDT Billing</div>
+      <div class="flex items-center gap-3" id="auth-links">
+        <span id="auth-loading" class="text-sm text-gray-500">Loading...</span>
+      </div>
+    </div>
   </div>
-</div>
+</nav>
 
-<!-- HERO -->
-<section class="px-12 py-24 relative z-10">
-  <p class="text-blue-400 text-sm font-medium tracking-widest uppercase mb-4 opacity-80">Zero Downtime Billing</p>
-  <h1 class="text-6xl font-extrabold mb-6 leading-tight">
-    Run Your Shop Billing <br>
-    <span class="text-blue-400">Like a Pro</span>
-  </h1>
-  <p class="text-slate-400 text-lg max-w-lg leading-relaxed">
-    Automated invoicing, real-time analytics, and zero-hassle reconciliation — all in one place.
-  </p>
-  <div class="flex gap-4 mt-10">
-    <button class="px-8 py-3 bg-blue-500 hover:bg-blue-400 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/30" onclick="startSignup()">
-      Get Started Free
-    </button>
-    <button class="px-8 py-3 card hover:bg-white/10 rounded-xl font-semibold transition-all duration-200">
-      Watch Demo
-    </button>
+<section class="hero-gradient text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="text-center">
+      <p class="text-sm uppercase tracking-[0.35em] text-blue-200 mb-4">Enterprise billing for growing teams</p>
+      <h1 class="text-4xl md:text-6xl font-black mb-6">Professional billing software for modern businesses</h1>
+      <p class="mx-auto max-w-2xl text-lg text-blue-100 leading-8">Automate invoices, monitor revenue in real-time, and secure every payment through a single, easy-to-use dashboard.</p>
+      <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+        <button class="btn-primary text-white px-8 py-4 rounded-2xl font-semibold transition-all" onclick="startSignup()">Start Free Trial</button>
+        <button class="bg-white text-gray-900 px-8 py-4 rounded-2xl font-semibold hover:bg-gray-100 transition-all" onclick="scrollToFeatures()">View Features</button>
+      </div>
+    </div>
+
+    <div class="mt-16 max-w-2xl mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-xl">
+      <h2 class="text-xl font-semibold text-white mb-4 text-center">Sign in with a secure magic link</h2>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input id="email-field" type="email" placeholder="name@company.com" class="flex-1 rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-white placeholder:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <button class="btn-primary text-white rounded-2xl px-6 py-4 font-semibold" onclick="handleMagicLink()">Send Magic Link</button>
+      </div>
+      <p class="mt-4 text-sm text-blue-100 text-center">No password needed. You’ll receive a secure link instantly.</p>
+    </div>
   </div>
 </section>
 
-<!-- BUTTERFLIES SCRIPT -->
+<section id="features" class="py-24 bg-slate-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Everything your billing team needs</h2>
+      <p class="max-w-2xl mx-auto text-lg text-slate-600">Manage recurring invoices, collect payments, and keep every customer account on track with robust analytics.</p>
+    </div>
+    <div class="grid gap-8 md:grid-cols-3">
+      <div class="feature-card rounded-3xl p-8 text-center shadow-sm">
+        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 text-slate-900">Automated Invoicing</h3>
+        <p class="text-slate-600">Send beautiful invoices automatically and keep your cash flow moving faster.</p>
+      </div>
+      <div class="feature-card rounded-3xl p-8 text-center shadow-sm">
+        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 text-slate-900">Real-Time Insights</h3>
+        <p class="text-slate-600">Use analytics to monitor paid invoices, overdue accounts, and revenue trends.</p>
+      </div>
+      <div class="feature-card rounded-3xl p-8 text-center shadow-sm">
+        <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-sky-600">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path></svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-3 text-slate-900">Secure Payments</h3>
+        <p class="text-slate-600">Collect payments securely with trusted providers and protect customer data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-slate-900 text-white py-16">
+  <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl font-bold mb-4">Ready to standardize your billing?</h2>
+    <p class="text-lg text-slate-300 mb-8">Get started in minutes with a modern billing solution built for growing businesses.</p>
+    <button class="btn-primary px-10 py-4 rounded-2xl text-lg font-semibold" onclick="startSignup()">Start your free trial</button>
+  </div>
+</section>
+
+<footer class="bg-white border-t border-slate-200 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-slate-500">
+    <div class="flex flex-col md:flex-row justify-between gap-4">
+      <div>
+        <p class="font-semibold text-slate-900">ZDT Billing</p>
+        <p>Professional billing software for modern teams.</p>
+      </div>
+      <div class="flex flex-wrap gap-6">
+        <a href="#" class="hover:text-slate-900">Features</a>
+        <a href="#" class="hover:text-slate-900">Pricing</a>
+        <a href="#" class="hover:text-slate-900">Support</a>
+      </div>
+    </div>
+    <div class="mt-8 text-center text-slate-400">© 2024 ZDT Billing. All rights reserved.</div>
+  </div>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ─────────────────────────────────────────────
-   SUPABASE INITIALIZATION
-───────────────────────────────────────────── */
 const SUPABASE_URL = 'https://qkbzwbgiyqedljkypvqe.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrYnp3YmdpeXFlZGxqa3lwdnFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTcwMDAwMDAsImV4cCI6OTE2MzUxOTk5OX0.UuKZfEZY-yZsvmCh3X8yZyXzZU1NKJqPpPGx88xaQRU';
-
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Check authentication status
 async function checkAuth() {
   const authLoading = document.getElementById('auth-loading');
   const authLinks = document.getElementById('auth-links');
-
   try {
     const { data: { session } } = await supabase.auth.getSession();
-
     authLoading.style.display = 'none';
-
     if (session) {
-      // User is logged in
       authLinks.innerHTML = `
-        <button class="btn-auth btn-auth-primary" onclick="goToDashboard()">📊 My Dashboard</button>
-        <button class="btn-auth btn-auth-secondary" onclick="logout()">Logout</button>
+        <a href="/user_dashboard.html" class="bg-slate-900 text-white px-4 py-2 rounded-2xl font-medium hover:bg-slate-800 transition-colors">Dashboard</a>
+        <button class="text-slate-700 font-medium hover:text-slate-900" onclick="logout()">Logout</button>
       `;
     } else {
-      // User is not logged in
       authLinks.innerHTML = `
-        <button class="btn-auth btn-auth-secondary" onclick="startLogin()">Login</button>
-        <button class="btn-auth btn-auth-primary" onclick="startSignup()">Sign Up</button>
+        <button class="text-slate-700 font-medium hover:text-slate-900" onclick="startLogin()">Login</button>
+        <button class="bg-slate-900 text-white px-4 py-2 rounded-2xl font-medium hover:bg-slate-800 transition-colors" onclick="startSignup()">Sign Up</button>
       `;
     }
   } catch (err) {
@@ -205,26 +140,16 @@ async function checkAuth() {
   }
 }
 
-// Auth functions
 async function startSignup() {
-  const email = prompt('Enter your email:');
+  const email = prompt('Enter your email to start:');
   if (!email) return;
-
   try {
-    const { error } = await supabase.auth.signUp({
-      email: email,
-      password: Math.random().toString(36).slice(-12), // Temporary password
-      options: {
-        emailRedirectTo: window.location.origin
-      }
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/user_dashboard.html' }
     });
-
-    if (error) {
-      alert('Signup error: ' + error.message);
-    } else {
-      alert('Check your email for confirmation link!');
-      checkAuth();
-    }
+    if (error) alert('Error: ' + error.message);
+    else alert('Magic link sent. Check your email.');
   } catch (err) {
     alert('Error: ' + err.message);
   }
@@ -233,214 +158,43 @@ async function startSignup() {
 async function startLogin() {
   const email = prompt('Enter your email:');
   if (!email) return;
-
   try {
     const { error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        emailRedirectTo: window.location.origin
-      }
+      email,
+      options: { emailRedirectTo: window.location.origin + '/user_dashboard.html' }
     });
-
-    if (error) {
-      alert('Login error: ' + error.message);
-    } else {
-      alert('Check your email for the magic link!');
-    }
+    if (error) alert('Error: ' + error.message);
+    else alert('Magic link sent. Check your email.');
   } catch (err) {
     alert('Error: ' + err.message);
   }
 }
 
-function goToDashboard() {
-  window.location.href = '/dashboard-user.html';
+async function handleMagicLink() {
+  const email = document.getElementById('email-field').value;
+  if (!email) { alert('Please enter your email.'); return; }
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/user_dashboard.html' }
+    });
+    if (error) alert('Error: ' + error.message);
+    else alert('Magic link sent. Check your email.');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
 
-async function logout() {
-  await supabase.auth.signOut();
-  checkAuth();
+function logout() {
+  supabase.auth.signOut().then(() => checkAuth());
 }
 
-// Initialize auth on page load
+function scrollToFeatures() {
+  document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+}
+
 checkAuth();
-
-/* ─────────────────────────────────────────────
-   CURSOR – smooth glowing ball
-───────────────────────────────────────────── */
-const glow = document.getElementById('cursor-glow');
-let cx = window.innerWidth/2, cy = window.innerHeight/2;
-let tx = cx, ty = cy;
-
-document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
-
-(function moveCursor() {
-  cx += (tx - cx) * 0.12;
-  cy += (ty - cy) * 0.12;
-  glow.style.left = cx + 'px';
-  glow.style.top  = cy + 'px';
-  requestAnimationFrame(moveCursor);
-})();
-
-/* ─────────────────────────────────────────────
-   BUTTERFLY DEFINITIONS
-   5 distinct wing shapes × many colour combos
-───────────────────────────────────────────── */
-
-// Each shape = [leftWingPath, rightWingPath]
-const SHAPES = [
-  // 1 – Classic monarch
-  [
-    'M50 52 C28 15, 2 22, 18 50 C2 76, 28 88, 50 52',
-    'M50 52 C72 15, 98 22, 82 50 C98 76, 72 88, 50 52'
-  ],
-  // 2 – Swallowtail (pointed lower lobe)
-  [
-    'M50 50 C30 10, 0  20, 15 46 C0 68, 22 96, 50 50',
-    'M50 50 C70 10,100 20, 85 46 C100 68, 78 96, 50 50'
-  ],
-  // 3 – Broad rounded
-  [
-    'M50 50 C20 5, -10 30, 20 52 C-5 75, 22 95, 50 50',
-    'M50 50 C80 5,110 30, 80 52 C105 75, 78 95, 50 50'
-  ],
-  // 4 – Slim atlas moth
-  [
-    'M50 52 C35 25, 8 30, 22 50 C8 70, 35 80, 50 52',
-    'M50 52 C65 25, 92 30, 78 50 C92 70, 65 80, 50 52'
-  ],
-  // 5 – Fan / peacock
-  [
-    'M50 50 C25 8, -5 15, 10 45 C-5 72, 20 95, 50 50',
-    'M50 50 C75 8,105 15, 90 45 C105 72, 80 95, 50 50'
-  ]
-];
-
-// Rich multicolour palette pairs [primary, secondary]
-const PALETTES = [
-  ['#f472b6','#ec4899'],   // hot pink
-  ['#60a5fa','#3b82f6'],   // sky blue
-  ['#a78bfa','#7c3aed'],   // violet
-  ['#34d399','#10b981'],   // emerald
-  ['#fbbf24','#f59e0b'],   // amber
-  ['#22d3ee','#06b6d4'],   // cyan
-  ['#f87171','#ef4444'],   // red
-  ['#c084fc','#a855f7'],   // purple
-  ['#86efac','#4ade80'],   // lime
-  ['#fb923c','#f97316'],   // orange
-  ['#e879f9','#d946ef'],   // fuchsia
-  ['#38bdf8','#0ea5e9'],   // light blue
-];
-
-/* ─────────────────────────────────────────────
-   CREATE BUTTERFLIES
-───────────────────────────────────────────── */
-const TOTAL = 18;
-const butterflies = [];
-
-for (let i = 0; i < TOTAL; i++) {
-  const shape   = SHAPES[i % SHAPES.length];
-  const palette = PALETTES[i % PALETTES.length];
-  const size    = 20 + Math.random() * 40;          // 20–60 px
-  const speed   = (0.25 + Math.random() * 0.35).toFixed(2) + 's'; // wing flap speed
-  const opacity = 0.55 + Math.random() * 0.45;
-
-  const el = document.createElement('div');
-  el.className = 'butterfly';
-  el.style.cssText = `width:${size}px; height:${size}px; opacity:${opacity}; --spd:${speed};`;
-  el.innerHTML = `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-      <defs>
-        <radialGradient id="lg${i}a" cx="40%" cy="40%" r="60%">
-          <stop offset="0%"   stop-color="${palette[0]}" stop-opacity="1"/>
-          <stop offset="100%" stop-color="${palette[1]}" stop-opacity="0.6"/>
-        </radialGradient>
-        <radialGradient id="lg${i}b" cx="60%" cy="40%" r="60%">
-          <stop offset="0%"   stop-color="${palette[1]}" stop-opacity="1"/>
-          <stop offset="100%" stop-color="${palette[0]}" stop-opacity="0.6"/>
-        </radialGradient>
-      </defs>
-      <!-- Left wing -->
-      <path class="wing-left"  d="${shape[0]}" fill="url(#lg${i}a)" stroke="${palette[0]}" stroke-width="0.5" stroke-opacity="0.4"/>
-      <!-- Right wing -->
-      <path class="wing-right" d="${shape[1]}" fill="url(#lg${i}b)" stroke="${palette[1]}" stroke-width="0.5" stroke-opacity="0.4"/>
-      <!-- Body -->
-      <ellipse cx="50" cy="52" rx="2" ry="8" fill="rgba(255,255,255,0.7)"/>
-      <!-- Antennae -->
-      <line x1="50" y1="44" x2="42" y2="30" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-      <circle cx="42" cy="29" r="1.5" fill="${palette[0]}"/>
-      <line x1="50" y1="44" x2="58" y2="30" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
-      <circle cx="58" cy="29" r="1.5" fill="${palette[1]}"/>
-    </svg>`;
-
-  document.body.appendChild(el);
-
-  butterflies.push({
-    el,
-    x:   Math.random() * window.innerWidth,
-    y:   Math.random() * window.innerHeight,
-    vx:  (Math.random() - 0.5) * 1.4,
-    vy:  (Math.random() - 0.5) * 1.4,
-    baseSpeed: 0.8 + Math.random() * 0.8,
-    angle: Math.random() * Math.PI * 2,
-    turnRate: (Math.random() - 0.5) * 0.06,
-    attracted: false,
-  });
-}
-
-/* ─────────────────────────────────────────────
-   ANIMATION LOOP
-───────────────────────────────────────────── */
-const ATTRACTION_RADIUS = 160;   // px – only react inside this radius
-const ATTRACTION_FORCE  = 0.025; // how strongly pulled toward cursor
-
-function loop() {
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-
-  butterflies.forEach(b => {
-    const dx   = cx - b.x;
-    const dy   = cy - b.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < ATTRACTION_RADIUS) {
-      /* ── Inside glow radius: drift gently toward cursor ── */
-      b.vx += (dx / dist) * ATTRACTION_FORCE * (1 - dist / ATTRACTION_RADIUS);
-      b.vy += (dy / dist) * ATTRACTION_FORCE * (1 - dist / ATTRACTION_RADIUS);
-      b.attracted = true;
-    } else {
-      /* ── Outside: free wandering with smooth curved flight ── */
-      b.attracted = false;
-      b.angle += b.turnRate + (Math.random() - 0.5) * 0.04;
-      const targetVx = Math.cos(b.angle) * b.baseSpeed;
-      const targetVy = Math.sin(b.angle) * b.baseSpeed;
-      b.vx += (targetVx - b.vx) * 0.04;
-      b.vy += (targetVy - b.vy) * 0.04;
-    }
-
-    // Clamp max speed
-    const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-    const maxSpd = b.attracted ? 2.5 : b.baseSpeed * 1.2;
-    if (spd > maxSpd) { b.vx *= maxSpd / spd; b.vy *= maxSpd / spd; }
-
-    b.x += b.vx;
-    b.y += b.vy;
-
-    // Soft wrap with a margin so they glide off-screen naturally
-    const margin = 50;
-    if (b.x > W + margin) b.x = -margin;
-    if (b.x < -margin)    b.x =  W + margin;
-    if (b.y > H + margin) b.y = -margin;
-    if (b.y < -margin)    b.y =  H + margin;
-
-    // Rotate to face direction of travel
-    const rot = Math.atan2(b.vy, b.vx) * (180 / Math.PI);
-    b.el.style.transform = `translate(${b.x}px, ${b.y}px) rotate(${rot}deg)`;
-  });
-
-  requestAnimationFrame(loop);
-}
-
-loop();
 </script>
+
 </body>
 </html>

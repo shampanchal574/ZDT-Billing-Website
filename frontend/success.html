@@ -4,47 +4,94 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment Successful — ZDT Billing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Inter, system-ui, sans-serif;
-      background: radial-gradient(circle at top, #e0f2fe 0%, #1e3a8a 45%, #020617 100%);
-      color: #111827;
-    }
-    .card {
-      width: min(520px, calc(100vw - 32px));
-      padding: 32px;
-      border-radius: 24px;
-      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
-      background: rgba(255,255,255,0.92);
-      text-align: center;
-    }
-    h1 { margin-bottom: 16px; font-size: clamp(2rem, 3.5vw, 2.75rem); }
-    p { margin: 0.75rem 0; color: #475569; }
-    #licenseKey { margin: 16px 0; padding: 16px 20px; border-radius: 16px; background: #f8fafc; color: #0f172a; font-family: 'Courier New', monospace; letter-spacing: 0.08em; }
-    button { cursor: pointer; border: none; border-radius: 999px; padding: 14px 24px; font-size: 1rem; font-weight: 600; }
-    .btn-copy { background: #2563eb; color: white; margin-top: 16px; }
-    .btn-download { background: #10b981; color: white; margin-top: 18px; }
-    .btn-download:hover, .btn-copy:hover { opacity: 0.94; }
-    .caption { margin-top: 20px; color: #64748b; font-size: 0.95rem; }
+    body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body>
-  <div class="card">
-    <h1>🎉 Payment Successful</h1>
-    <p>Your License Key:</p>
-    <div id="licenseKey">Loading...</div>
-    <button class="btn-copy" type="button" onclick="copyKey()">Copy License</button>
-    <div style="margin-top:18px;">
-      <a href="/download">
-        <button class="btn-download" type="button">Download Software</button>
-      </a>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full">
+    <!-- Success Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+
+      <!-- Success Icon -->
+      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+
+      <!-- Subtitle -->
+      <p class="text-gray-600 mb-6">Thank you for your purchase. Your license has been activated.</p>
+
+      <!-- License Key -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <p class="text-sm text-gray-600 mb-2">Your License Key:</p>
+        <div id="licenseKey" class="font-mono text-lg font-semibold text-gray-900 bg-white rounded border px-3 py-2 break-all">
+          Loading...
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <button class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors" onclick="copyKey(event)">
+          Copy License Key
+        </button>
+
+        <a href="/user_dashboard.html" class="block w-full bg-gray-100 text-gray-900 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center">
+          View in Dashboard
+        </a>
+
+        <a href="/download" class="block w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors text-center">
+          Download Software
+        </a>
+      </div>
+
+      <!-- Additional Info -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-sm text-gray-500 mb-2">What happens next?</p>
+        <ul class="text-sm text-gray-600 text-left space-y-1">
+          <li class="flex items-center">
+            <svg class="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            License is active and ready to use
+          </li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Download the software using the link above
+          </li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Activate using your license key
+          </li>
+        </ul>
+      </div>
+
+      <!-- Support -->
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500">
+          Need help? <a href="mailto:support@zdtbilling.com" class="text-blue-600 hover:text-blue-700">Contact Support</a>
+        </p>
+      </div>
+
     </div>
-    <p class="caption">Save your license key. It will be required to activate the software.</p>
+
+    <!-- Back to Home -->
+    <div class="text-center mt-6">
+      <a href="/" class="text-gray-600 hover:text-gray-900 text-sm">← Back to Home</a>
+    </div>
   </div>
 
   <script>
@@ -53,14 +100,26 @@
     const licenseKey = urlParams.get('license') || 'ZDT-847EFF36';
     document.getElementById('licenseKey').textContent = licenseKey;
 
-    function copyKey() {
+    function copyKey(event) {
       const key = document.getElementById('licenseKey').textContent.trim();
       if (!navigator.clipboard) {
         alert('Clipboard is not available in this browser.');
         return;
       }
       navigator.clipboard.writeText(key)
-        .then(() => alert('License copied!'))
+        .then(() => {
+          // Show success feedback
+          const button = event.target;
+          const originalText = button.textContent;
+          button.textContent = 'Copied!';
+          button.classList.add('bg-green-600', 'hover:bg-green-700');
+          button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('bg-green-600', 'hover:bg-green-700');
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+          }, 2000);
+        })
         .catch(() => alert('Unable to copy license automatically. Please copy it manually.'));
     }
   </script>

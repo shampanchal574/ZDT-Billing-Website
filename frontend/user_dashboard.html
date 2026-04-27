@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ZDT Billing</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<nav class="bg-white shadow">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+      <a href="/" class="text-2xl font-bold text-slate-900">ZDT Billing</a>
+      <div class="flex items-center gap-4">
+        <span id="user-email" class="text-sm text-slate-600"></span>
+        <button class="text-slate-700 hover:text-slate-900 font-medium" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">Billing Dashboard</h1>
+    <p class="text-slate-600">Manage licenses, view revenue, and purchase new billing credits.</p>
+  </div>
+
+  <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6"></div>
+
+  <div class="grid gap-6 md:grid-cols-3 mb-8">
+    <div class="bg-white rounded-3xl shadow p-6">
+      <p class="text-sm text-slate-500">Total Licenses</p>
+      <p id="total-licenses" class="mt-4 text-3xl font-semibold text-slate-900">0</p>
+    </div>
+    <div class="bg-white rounded-3xl shadow p-6">
+      <p class="text-sm text-slate-500">Active Licenses</p>
+      <p id="active-licenses" class="mt-4 text-3xl font-semibold text-slate-900">0</p>
+    </div>
+    <div class="bg-white rounded-3xl shadow p-6">
+      <p class="text-sm text-slate-500">Estimated Revenue</p>
+      <p id="total-revenue" class="mt-4 text-3xl font-semibold text-slate-900">₹0</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow p-6 mb-8">
+    <h2 class="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
+    <div class="flex flex-wrap gap-4">
+      <button class="bg-slate-900 text-white px-6 py-3 rounded-2xl hover:bg-slate-800 transition" onclick="buyNewKey()">Buy New License</button>
+      <button class="bg-slate-100 text-slate-900 px-6 py-3 rounded-2xl hover:bg-slate-200 transition" onclick="refreshLicenses()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow">
+    <div class="border-b border-slate-200 px-6 py-4">
+      <h2 class="text-xl font-semibold text-slate-900">Your Licenses</h2>
+    </div>
+    <div id="licenses-container" class="p-6">
+      <div class="flex items-center justify-center py-12 text-slate-500">
+        <svg class="animate-spin h-8 w-8 mr-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        Loading your licenses...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://qkbzwbgiyqedljkypvqe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrYnp3YmdpeXFlZGxqa3lwdnFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTcwMDAwMDAsImV4cCI6OTE2MzUxOTk5OX0.UuKZfEZY-yZsvmCh3X8yZyXzZU1NKJqPpPGx88xaQRU';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadLicenses() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = '/'; return; }
+    document.getElementById('user-email').textContent = session.user.email;
+    const response = await fetch('/get-licenses', { headers: { 'Authorization': `Bearer ${session.access_token}` } });
+    const result = await response.json();
+    if (!result.success) { showError('Unable to load licenses.'); document.getElementById('licenses-container').innerHTML = renderEmptyState(); return; }
+    const licenses = result.licenses || [];
+    updateStats(licenses);
+    document.getElementById('licenses-container').innerHTML = licenses.length ? licenses.map(renderLicenseCard).join('') : renderEmptyState();
+  } catch (err) { console.error(err); showError('An error occurred while loading licenses.'); }
+}
+
+function updateStats(licenses) {
+  const total = licenses.length;
+  const active = licenses.filter(l => l.active).length;
+  const revenue = total * 999;
+  document.getElementById('total-licenses').textContent = total;
+  document.getElementById('active-licenses').textContent = active;
+  document.getElementById('total-revenue').textContent = '₹' + revenue.toLocaleString();
+}
+
+function renderLicenseCard(license) {
+  const createdDate = new Date(license.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  const statusClass = license.active ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+  const statusText = license.active ? 'Active' : 'Inactive';
+  return `
+    <div class="border border-slate-200 rounded-3xl p-6 mb-4">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <div class="font-mono text-lg font-semibold text-slate-900 mb-2">${license.license_key}</div>
+          <div class="flex flex-wrap gap-3 text-sm text-slate-600">
+            <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">${statusText}</span>
+            <span>${createdDate}</span>
+          </div>
+        </div>
+        <div class="flex gap-3 flex-wrap">
+          <button class="rounded-2xl border border-slate-200 px-4 py-2 text-slate-700 hover:bg-slate-100" onclick="copyToClipboard('${license.license_key}')">Copy</button>
+          ${license.device_id ? '' : `<button class="rounded-2xl bg-slate-900 text-white px-4 py-2 hover:bg-slate-800" onclick="activateLicense('${license.license_key}')">Activate</button>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEmptyState() {
+  return `
+    <div class="text-center py-12 text-slate-600">
+      <p class="mb-4 text-lg font-medium">No licenses found.</p>
+      <button class="bg-slate-900 text-white px-6 py-3 rounded-2xl hover:bg-slate-800" onclick="buyNewKey()">Purchase License</button>
+    </div>
+  `;
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => alert('License key copied.')).catch(() => alert('Failed to copy.'));
+}
+
+function activateLicense(licenseKey) {
+  const deviceId = prompt('Enter device ID to activate:');
+  if (!deviceId) return;
+  alert('Activation coming soon for ' + licenseKey + ' on ' + deviceId);
+}
+
+async function buyNewKey() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = '/'; return; }
+    const keyResponse = await fetch('/get-key');
+    const key = (await keyResponse.json()).key;
+    const orderResponse = await fetch('/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: 99900, email: session.user.email }) });
+    const order = await orderResponse.json();
+    const options = {
+      key,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.id,
+      name: 'ZDT Billing',
+      description: 'License Purchase - ₹999',
+      prefill: { email: session.user.email, name: session.user.user_metadata?.name || '' },
+      handler: async response => {
+        const verifyResponse = await fetch('/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, email: session.user.email }) });
+        const result = await verifyResponse.json();
+        if (result.success) {
+          window.location.href = '/success.html?license=' + encodeURIComponent(result.license);
+        } else {
+          showError('Payment verification failed.');
+        }
+      },
+      theme: { color: '#2563eb' }
+    };
+    new Razorpay(options).open();
+  } catch (err) {
+    console.error(err);
+    showError('Payment initialization failed.');
+  }
+}
+
+function refreshLicenses() { loadLicenses(); }
+
+function showError(message) {
+  const errorEl = document.getElementById('error-message');
+  errorEl.textContent = message;
+  errorEl.classList.remove('hidden');
+  setTimeout(() => errorEl.classList.add('hidden'), 5000);
+}
+
+function logout() { supabase.auth.signOut().then(() => window.location.href = '/'); }
+
+loadLicenses();
+</script>
+
+</body>
+</html>
