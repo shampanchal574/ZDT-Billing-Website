@@ -83,7 +83,7 @@ async function loadLicenses() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = '/'; return; }
     document.getElementById('user-email').textContent = session.user.email;
-    const response = await fetch('/get-licenses', { headers: { 'Authorization': `Bearer ${session.access_token}` } });
+    const response = await fetch('http://localhost:5000/get-licenses', { headers: { 'Authorization': `Bearer ${session.access_token}` } });
     const result = await response.json();
     if (!result.success) { showError('Unable to load licenses.'); document.getElementById('licenses-container').innerHTML = renderEmptyState(); return; }
     const licenses = result.licenses || [];
@@ -147,9 +147,9 @@ async function buyNewKey() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = '/'; return; }
-    const keyResponse = await fetch('/get-key');
+    const keyResponse = await fetch('http://localhost:5000/get-key');
     const key = (await keyResponse.json()).key;
-    const orderResponse = await fetch('/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: 99900, email: session.user.email }) });
+    const orderResponse = await fetch('http://localhost:5000/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: 99900, email: session.user.email }) });
     const order = await orderResponse.json();
     const options = {
       key,
@@ -160,7 +160,7 @@ async function buyNewKey() {
       description: 'License Purchase - ₹999',
       prefill: { email: session.user.email, name: session.user.user_metadata?.name || '' },
       handler: async response => {
-        const verifyResponse = await fetch('/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, email: session.user.email }) });
+        const verifyResponse = await fetch('http://localhost:5000/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, email: session.user.email }) });
         const result = await verifyResponse.json();
         if (result.success) {
           window.location.href = '/success.html?license=' + encodeURIComponent(result.license);
